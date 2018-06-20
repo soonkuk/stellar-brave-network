@@ -1,7 +1,7 @@
 package account
 
 import (
-	"github.com/zzim2x/brave-network/cli/command"
+	"github.com/soonkuk/stellar-brave-network/cli/command"
 	"github.com/spf13/cobra"
 	"fmt"
 	"github.com/stellar/go/clients/horizon"
@@ -29,7 +29,7 @@ func NewAccountCommand(cli *command.BraveCli) *cobra.Command {
 				return
 			}
 
-			account, err := cli.HorizonClient().LoadAccount(address)
+			account, err := cli.HorizonClient1().LoadAccount(address)
 
 			if err == nil {
 				fmt.Println("My account address:", account.AccountID)

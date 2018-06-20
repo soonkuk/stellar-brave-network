@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
-	"github.com/zzim2x/brave-network/cli/command"
+	"github.com/soonkuk/stellar-brave-network/cli/command"
 )
 
 func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
@@ -28,7 +28,7 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 			tx, err := build.Transaction(
 				build.Network{Passphrase: cli.Network.Passphrase},
 				build.SourceAccount{AddressOrSeed: seed},
-				build.AutoSequence{SequenceProvider: cli.HorizonClient()},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient1()},
 				build.CreateAccount(
 					build.Destination{AddressOrSeed: address},
 					build.NativeAmount{Amount: amount},
@@ -39,7 +39,7 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 				panic(err)
 			}
 
-			submit(cli.HorizonClient(), tx, seed)
+			submit(cli.HorizonClient1(), tx, seed)
 		},
 	}
 
@@ -62,7 +62,7 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 			tx, err := build.Transaction(
 				build.Network{Passphrase: cli.Network.Passphrase},
 				build.SourceAccount{AddressOrSeed: seed},
-				build.AutoSequence{SequenceProvider: cli.HorizonClient()},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient1()},
 				build.Payment(
 					build.Destination{AddressOrSeed: address},
 					build.NativeAmount{Amount: amount},
@@ -73,7 +73,7 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 				panic(err)
 			}
 
-			submit(cli.HorizonClient(), tx, seed)
+			submit(cli.HorizonClient1(), tx, seed)
 		},
 	}
 
@@ -97,7 +97,7 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 			tx1, err1 := build.Transaction(
 				build.Network{Passphrase: cli.Network.Passphrase},
 				build.SourceAccount{AddressOrSeed: seed},
-				build.AutoSequence{SequenceProvider: cli.HorizonClient()},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient1()},
 				build.Payment(
 					build.Destination{AddressOrSeed: address1},
 					build.NativeAmount{Amount: amount},
@@ -111,7 +111,7 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 			tx2, err2 := build.Transaction(
 				build.Network{Passphrase: cli.Network.Passphrase},
 				build.SourceAccount{AddressOrSeed: seed},
-				build.AutoSequence{SequenceProvider: cli.HorizonClient()},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient2()},
 				build.Payment(
 					build.Destination{AddressOrSeed: address2},
 					build.NativeAmount{Amount: amount},
@@ -122,8 +122,8 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 				panic(err2)
 			}
 
-			submit(cli.HorizonClient(), tx1, seed)
-			submit(cli.HorizonClient(), tx2, seed)
+			submit(cli.HorizonClient1(), tx1, seed)
+			submit(cli.HorizonClient2(), tx2, seed)
 		},
 	}
 

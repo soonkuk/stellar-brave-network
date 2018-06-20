@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/spf13/cobra"
 	"github.com/jinzhu/configor"
-	"github.com/zzim2x/brave-network/cli/command"
-	"github.com/zzim2x/brave-network/cli/command/commands"
+	"github.com/soonkuk/stellar-brave-network/cli/command"
+	"github.com/soonkuk/stellar-brave-network/cli/command/commands"
 )
 
 func main() {

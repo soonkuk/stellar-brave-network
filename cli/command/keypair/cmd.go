@@ -1,7 +1,7 @@
 package keypair
 
 import (
-	"github.com/zzim2x/brave-network/cli/command"
+	"github.com/soonkuk/stellar-brave-network/cli/command"
 	"github.com/spf13/cobra"
 	"fmt"
 	"github.com/stellar/go/keypair"
