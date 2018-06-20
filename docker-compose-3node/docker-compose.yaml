@@ -1,0 +1,72 @@
+version: "3.3"
+services:
+  db1:
+    image: stellar/stellar-core-state
+    volumes: ["db1-data:/var/lib/postgresql/data", "db1-unixsocket:/postgresql-unix-sockets"]
+  db2:
+    image: stellar/stellar-core-state
+    volumes: ["db2-data:/var/lib/postgresql/data", "db2-unixsocket:/postgresql-unix-sockets"]
+  db3:
+    image: stellar/stellar-core-state
+    volumes: ["db3-data:/var/lib/postgresql/data", "db3-unixsocket:/postgresql-unix-sockets"]
+  dbh1:  # postgres for horizon
+    image: stellar/stellar-core-state
+    volumes: ["dbh1-data:/var/lib/postgresql/data", "dbh1-unixsocket:/postgresql-unix-sockets"]
+
+  horizon1:
+    image: zzim2x/stellar-horizon:0.13.0
+    command: "initdb serve"
+    env_file: ["q_3node.env"]
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_UNIX_SOCKET: "/var/run/postgres"
+      POSTGRES_CORE_UNIX_SOCKET: "/var/run/postgres-core"
+      STELLAR_CORE_URL: "http://core2:11626"
+      SERVE_OPTS: "--ingest=true"
+    volumes: ["db2-unixsocket:/var/run/postgres-core", "dbh1-unixsocket:/var/run/postgres"]
+    depends_on: ["db2", "dbh1", "core2"]
+  
+  core1:
+    image: zzim2x/stellar-core-quorum:9.2.0-13d55680
+    env_file: ["q_3node.env"]
+    command: "core1 initdb newhist forcescp"
+    volumes: ["./q_inter.cfg.tmpl:/etc/confd/templates/stellar-core.cfg.tmpl", "db1-unixsocket:/var/run/postgres", "history-data:/opt/stellar-core/history"]
+    environment:
+      KNOWN_PEERS: '["core2", "core3"]'
+      COMMANDS: '["ll?level=debug"]'
+    ports:
+      - "11681:11626"
+    depends_on: ["db1"]
+  core2:
+    image: zzim2x/stellar-core-quorum:9.2.0-13d55680
+    env_file: ["q_3node.env"]
+    command: "core2 initdb newhist forcescp"
+    volumes: ["./q_inter.cfg.tmpl:/etc/confd/templates/stellar-core.cfg.tmpl", "db2-unixsocket:/var/run/postgres", "history-data:/opt/stellar-core/history"]
+    environment:
+       KNOWN_PEERS: '["core1", "core3"]'
+       COMMANDS: '["ll?level=debug"]'
+    ports:
+      - "11682:11626"
+    depends_on: ["db2"]
+  core3:
+    image: zzim2x/stellar-core-quorum:9.2.0-13d55680
+    env_file: ["q_3node.env"]
+    command: "core3 initdb newhist forcescp"
+    volumes: ["./q_inter.cfg.tmpl:/etc/confd/templates/stellar-core.cfg.tmpl", "db3-unixsocket:/var/run/postgres", "history-data:/opt/stellar-core/history"]
+    environment:
+       KNOWN_PEERS: '["core1", "core2"]'
+       COMMANDS: '["ll?level=debug"]'
+    ports:
+      - "11683:11626"
+    depends_on: ["db3"]
+volumes:
+  db1-data:
+  db1-unixsocket:
+  db2-data:
+  db2-unixsocket:
+  db3-data:
+  db3-unixsocket:
+  dbh1-data:
+  dbh1-unixsocket:
+  history-data:
