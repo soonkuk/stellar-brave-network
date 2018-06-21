@@ -105,7 +105,7 @@ $ cd `go env GOPATH`/src/github.com/zzim2x/brave-network/cli
 
 ROOT_SEED=SCTJ4RIYLZLA42675VYOE4QMERVDMQGTUGL44FLPXP3MN6JKD76CLG4M
 ACCOUNT_SEED=`bin/brave keypair generate | awk '{print $2}'`
-ACCOUNT_ADDRESS=`bin/brave keypair parse --seed=$NEW_ACCOUNT | awk '{print $2}'`
+ACCOUNT_ADDRESS=`bin/brave keypair parse --seed=$ACCOUNT_SEED | awk '{print $2}'`
 
 bin/brave transaction fund --seed $ROOT_SEED --address $ACCOUNT_ADDRESS --amount 10240
 > transaction posted in ledger: 34221
@@ -114,6 +114,14 @@ bin/brave account balance --address $ACCOUNT_ADDRESS
 > My account address: GAAL6DUVRMJTHGDW3PZSAMDLDPBR5GM6ENDTD2KGR2P6PPXHFXHHJQVG
 > type: native balance: 10240.0000000
 ```
+
+## 송금 거래
+bin/brave transaction payment --seed <sender account seed> --address <receiver account address> --amount <transaction amount>
+
+
+## 다중 송금 거래(서로 다른 horizon을 이용한)
+bin/brave transaction payments --seed <sender account seed> --address1 <receiver1 account address> --address2 <receiver2 account address> --amount <transaction amount>
+
 
 ## 잔고 확인
 
