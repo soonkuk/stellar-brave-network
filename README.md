@@ -116,12 +116,14 @@ bin/brave account balance --address $ACCOUNT_ADDRESS
 ```
 
 ## 송금 거래
+```
 bin/brave transaction payment --seed <sender account seed> --address <receiver account address> --amount <transaction amount>
-
+```
 
 ## 다중 송금 거래(서로 다른 horizon을 이용한)
+```
 bin/brave transaction payments --seed <sender account seed> --address1 <receiver1 account address> --address2 <receiver2 account address> --amount <transaction amount>
-
+```
 
 ## 잔고 확인
 
