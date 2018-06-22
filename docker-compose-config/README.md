@@ -24,8 +24,11 @@
 }
 ```
 groups은 모든 노드가 서로 바라보는 쿼럼구성
+
 binary_link는 양방향 validator 설정
+
 unary_link는 단방향 validator 설정
+
 horizon은 horizon 갯수 지정과 연결된 stellar core 표시
 
 ## 구동
