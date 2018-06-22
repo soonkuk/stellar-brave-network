@@ -38,4 +38,4 @@ $ python install ruamel.yaml
 $ python convert_env.py <config file> <docker-compose name>
 ```
 
-<docker-compose name>과 같은 이름의 폴더가 생기고 폴더아래 docker-compose 설정파일이 생성
+`docker-compose name`과 같은 이름의 폴더가 생기고 폴더아래 docker-compose 설정파일이 생성
