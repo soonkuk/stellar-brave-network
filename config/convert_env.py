@@ -1,6 +1,7 @@
 import json
 import shutil
 import yaml
+import ruamel.yaml
 
 def convert_json_config(config):
     validator_dict = {}
@@ -24,6 +25,9 @@ def convert_json_config(config):
         validator_dict = add_binary_validate(binary, validator_dict)
         del config['binary_link']
 
+    if 'horizon' in config:
+        
+
     make_env_file(validator_dict)
     make_docker_compose_file(validator_dict) 
 
@@ -40,35 +44,38 @@ def make_env_file(validator_dict):
             f.write(v_set)
 
 def make_docker_compose_file(validator_dict):
+    dq = ruamel.yaml.scalarstring.DoubleQuotedScalarString
     port = 11680
     config_dict={}
-    config_dict.setdefault("version", "\"3.3\"":)
+    config_dict.setdefault("version", dq('3.3'))
     config_dict.setdefault("services", dict())
-    config_dict.setdefault("volumes", list()) 
+    config_dict.setdefault("volumes", dict())
 
     for node in validator_dict.keys():
         config_dict["services"].setdefault("db"+str(node), dict())
         config_dict["services"]["db"+str(node)].setdefault("image", "stellar/stellar-core-state")
-        config_dict["services"]["db"+str(node)].setdefault("volumes", ["db"+str(node) + "-data:/var/lib/postgresql/data", "db"+str(node)+"-unixsocket:/postgresql-unix-sockets"])
+        config_dict["services"]["db"+str(node)].setdefault("volumes", [dq("db"+str(node)+"-data:/var/lib/postgresql/data"), dq("db"+str(node)+"-unixsocket:/postgresql-unix-sockets")])
         config_dict["services"].setdefault("core"+str(node), dict())
         config_dict["services"]["core"+str(node)].setdefault("image", "zzim2x/stellar-core-quorum:9.2.0")
-        config_dict["services"]["core"+str(node)].setdefault("env_file", ["q_"+str(node)+".env"])
-        config_dict["services"]["core"+str(node)].setdefault("command", "core"+str(node)+" initdb newhist forcescp")
-        config_dict["services"]["core"+str(node)].setdefault("volumes", ["./q_inter.cfg.tmpl:/etc/confd/templates/stellar-core.cfg.tmpl", "db"+str(node)+"-unixsocket:/var/run/postgres", "history-data:/opt/stellar-core/history"])
+        config_dict["services"]["core"+str(node)].setdefault("env_file", [dq("q_"+str(node)+".env")])
+        config_dict["services"]["core"+str(node)].setdefault("command", dq("core"+str(node)+" initdb newhist forcescp"))
+        config_dict["services"]["core"+str(node)].setdefault("volumes", [dq("./q_inter.cfg.tmpl:/etc/confd/templates/stellar-core.cfg.tmpl"), dq("db"+str(node)+"-unixsocket:/var/run/postgres"), dq("history-data:/opt/stellar-core/history")])
         config_dict["services"]["core"+str(node)].setdefault("environment", dict())
         config_dict["services"]["core"+str(node)]["environment"].setdefault("KNOWN_PEERS", "")
-        v_set = "\'["
+        v_set = "["
         for vnode in validator_dict[node]:
             if(vnode != validator_dict[node][-1]):
                 v_set+=("\"core"+str(vnode)+"\", ")
             else:
-                v_set+=("\"core"+str(vnode)+"\"]\'")
+                v_set+=("\"core"+str(vnode)+"\"]")
         config_dict["services"]["core"+str(node)]["environment"]["KNOWN_PEERS"]=v_set
         config_dict["services"]["core"+str(node)]["environment"].setdefault("COMMANDS", '[\"ll?level=debug\"]')
-        config_dict["services"]["core"+str(node)].setdefault("ports", [str(port+int(node)) + ":11626"])
-        config_dict["services"]["core"+str(node)].setdefault("depends_on", ["db"+str(node)])
+        config_dict["services"]["core"+str(node)].setdefault("ports", [dq(str(port+int(node)) + ":11626")])
+        config_dict["services"]["core"+str(node)].setdefault("depends_on", [dq("db"+str(node))])
+        config_dict["volumes"].setdefault("db"+str(node)+"-data")
+        config_dict["volumes"].setdefault("db"+str(node)+"-unixsocket")
     with open('docker-compose.yaml', 'w') as f:
-        f.write(yaml.dump(config_dict, default_flow_style=False))
+        ruamel.yaml.dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
 
 def groupset_to_node_validatorset(group_dict):
     node_list = {}
