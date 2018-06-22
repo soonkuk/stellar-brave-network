@@ -1,4 +1,6 @@
 import json
+import shutil
+import yaml
 
 def convert_json_config(config):
     validator_dict = {}
@@ -22,57 +24,61 @@ def convert_json_config(config):
         validator_dict = add_binary_validate(binary, validator_dict)
         del config['binary_link']
 
-    if 'nodes' in config:
-        nodes = config['nodes']
-        config['faulties'] = dict()
-        for node in nodes:
-            if 'threshold' in nodes[node]:
-                validator_dict[node]['quorum']['threshold'] = nodes[node]['threshold']
+    make_env_file(validator_dict)
+    make_docker_compose_file(validator_dict) 
 
-            if 'faulty_kind' in nodes[node]:
-                case_dict = {}
-                faulty_dict[node] = []
-                case_dict.setdefault('case', dict())['kind'] = nodes[node]['faulty_kind']
-                faulty_dict[node].append(case_dict)
+def make_env_file(validator_dict):
+    for node in validator_dict.keys():
+        shutil.copy('default.env', 'q_' + str(node)+'.env')
+        with open('q_'+str(node)+'.env', "a") as f:
+            v_set = "VALIDATORS=["
+            for vnode in validator_dict[node]:
+                if(vnode != validator_dict[node][-1]):
+                    v_set+=("\"$core"+str(vnode)+"\", ")
+                else:
+                    v_set+=("\"$core"+str(vnode)+"\"]")
+            f.write(v_set)
 
-                if 'faulty_percent' in nodes[node]:
-                    for node_case in faulty_dict[node]:
-                        node_case['case']['frequency'] = nodes[node]['faulty_percent']
+def make_docker_compose_file(validator_dict):
+    port = 11680
+    config_dict={}
+    config_dict.setdefault("version", "\"3.3\"":)
+    config_dict.setdefault("services", dict())
+    config_dict.setdefault("volumes", list()) 
 
-                    if isinstance(nodes[node]['faulty_percent'], dict):
-                        for node_case in faulty_dict[node]:
-                            node_case['case']['frequency']['per_consensus'] = nodes[node]['faulty_percent']['per_consensus']
-
-                if 'duration' in nodes[node]:
-                    for node_case in faulty_dict[node]:
-                        node_case['case']['duration'] = nodes[node]['duration']
-
-                if 'target_nodes' in nodes[node]:
-                    for node_case in faulty_dict[node]:
-                        node_case['case']['target_nodes'] = nodes[node]['target_nodes']
-
-        del config['nodes']
-
-    with open("q_inter.env", "w") as q:
-        q.write(str(validator_dict))
-        q.write(str(faulty_dict))
-        q.write("/n")
-        q.write(string)
-    config['nodes'] = validator_dict
-    config['faulties'] = faulty_dict
-
-
-    return config 
+    for node in validator_dict.keys():
+        config_dict["services"].setdefault("db"+str(node), dict())
+        config_dict["services"]["db"+str(node)].setdefault("image", "stellar/stellar-core-state")
+        config_dict["services"]["db"+str(node)].setdefault("volumes", ["db"+str(node) + "-data:/var/lib/postgresql/data", "db"+str(node)+"-unixsocket:/postgresql-unix-sockets"])
+        config_dict["services"].setdefault("core"+str(node), dict())
+        config_dict["services"]["core"+str(node)].setdefault("image", "zzim2x/stellar-core-quorum:9.2.0")
+        config_dict["services"]["core"+str(node)].setdefault("env_file", ["q_"+str(node)+".env"])
+        config_dict["services"]["core"+str(node)].setdefault("command", "core"+str(node)+" initdb newhist forcescp")
+        config_dict["services"]["core"+str(node)].setdefault("volumes", ["./q_inter.cfg.tmpl:/etc/confd/templates/stellar-core.cfg.tmpl", "db"+str(node)+"-unixsocket:/var/run/postgres", "history-data:/opt/stellar-core/history"])
+        config_dict["services"]["core"+str(node)].setdefault("environment", dict())
+        config_dict["services"]["core"+str(node)]["environment"].setdefault("KNOWN_PEERS", "")
+        v_set = "\'["
+        for vnode in validator_dict[node]:
+            if(vnode != validator_dict[node][-1]):
+                v_set+=("\"core"+str(vnode)+"\", ")
+            else:
+                v_set+=("\"core"+str(vnode)+"\"]\'")
+        config_dict["services"]["core"+str(node)]["environment"]["KNOWN_PEERS"]=v_set
+        config_dict["services"]["core"+str(node)]["environment"].setdefault("COMMANDS", '[\"ll?level=debug\"]')
+        config_dict["services"]["core"+str(node)].setdefault("ports", [str(port+int(node)) + ":11626"])
+        config_dict["services"]["core"+str(node)].setdefault("depends_on", ["db"+str(node)])
+    with open('docker-compose.yaml', 'w') as f:
+        f.write(yaml.dump(config_dict, default_flow_style=False))
 
 def groupset_to_node_validatorset(group_dict):
     node_list = {}
     for group_name in group_dict:
         for from_node in group_dict[group_name]:
             if from_node not in node_list:
-                node_list.setdefault(from_node, dict()).setdefault('quorum', dict()).setdefault('validators', list())
+                node_list.setdefault(from_node, list())
             for to_node in group_dict[group_name]:
                 if (to_node not in node_list[from_node]) and (to_node != from_node):
-                    node_list[from_node]['quorum']['validators'].append(to_node)
+                    node_list[from_node].append(to_node)
 
     return node_list
 
@@ -100,33 +106,32 @@ def add_nodes(from_nodes, to_nodes, validatorList):
     if isinstance(from_nodes, (list, tuple,)):
         for from_node in from_nodes:
             if from_node not in node_list:
-                node_list.setdefault(from_node, dict()).setdefault('quorum', dict()).setdefault('validators', list())
+                node_list.setdefault(from_node, list())
 
             if isinstance(to_nodes, (list,)):
                 for to_node in to_nodes:
                     if (to_node not in node_list[from_node]) and (to_node != from_node):
-                        node_list[from_node]['quorum']['validators'].append(to_node)
+                        node_list[from_node].append(to_node)
 
             else:
                 node_list[from_node].append(to_nodes)
     else:
         if from_nodes not in node_list:
-            node_list.setdefault('from_nodes', dict()).setdefault('quorum', dict()).setdefault('validators', list())
+            node_list.setdefault('from_nodes', list())
 
         if isinstance(to_nodes, (list, tuple,)):
             for to_node in to_nodes:
                 if to_node not in node_list[from_nodes] and to_node != from_nodes:
-                    node_list[from_nodes]['quorum']['validators'].append(to_node)
+                    node_list[from_nodes].append(to_node)
 
         else:
-            node_list[from_nodes]['quorum']['validators'].append(to_nodes)
+            node_list[from_nodes].append(to_nodes)
 
     return node_list
 
 if __name__=='__main__':
     
     with open("config.json") as f:
-        temp_design=convert_json_config(json.load(f))
-    print(temp_design)
+        convert_json_config(json.load(f))
 
 
