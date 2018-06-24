@@ -104,7 +104,7 @@ def make_docker_compose_file(quorum_dict, horizon_dict):
     config_dict["volumes"].setdefault("history-data")
 
     with open('./'+args.name+'/'+'docker-compose.yaml', 'w') as f:
-        ruamel.yaml.dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
+        ruamel.yaml.safe_dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
 
 
 def groupset_to_node_validatorset(group_dict):
