@@ -27,3 +27,10 @@ func (cli *BraveCli) HorizonClient2() *horizon.Client {
 		HTTP: http.DefaultClient,
 	}
 }
+
+func (cli *BraveCli) HorizonClient3() *horizon.Client {
+	return &horizon.Client{
+		URL: "http://127.0.0.1:8002",
+		HTTP: http.DefaultClient,
+	}
+}

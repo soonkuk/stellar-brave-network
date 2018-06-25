@@ -3,10 +3,10 @@ package transaction
 import (
 	"fmt"
 
+	"github.com/soonkuk/stellar-brave-network/cli/command"
 	"github.com/spf13/cobra"
 	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
-	"github.com/soonkuk/stellar-brave-network/cli/command"
 )
 
 func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
@@ -136,7 +136,83 @@ func NewTransactionCommand(cli *command.BraveCli) *cobra.Command {
 	payments.MarkFlagRequired("address2")
 	payments.MarkFlagRequired("amount")
 
-	cmd.AddCommand(fund, payment, payments)
+	multipayment := &cobra.Command{
+		Use:   "multipayment",
+		Short: "multipayment",
+		Long:  "",
+		Run: func(cmd *cobra.Command, args []string) {
+			seed1 := cmd.Flags().Lookup("seed1").Value.String()
+			seed2 := cmd.Flags().Lookup("seed2").Value.String()
+			seed3 := cmd.Flags().Lookup("seed3").Value.String()
+			address1 := cmd.Flags().Lookup("address1").Value.String()
+			address2 := cmd.Flags().Lookup("address2").Value.String()
+			address3 := cmd.Flags().Lookup("address3").Value.String()
+			amount := cmd.Flags().Lookup("amount").Value.String()
+
+			tx1, err1 := build.Transaction(
+				build.Network{Passphrase: cli.Network.Passphrase},
+				build.SourceAccount{AddressOrSeed: seed1},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient1()},
+				build.Payment(
+					build.Destination{AddressOrSeed: address1},
+					build.NativeAmount{Amount: amount},
+				),
+			)
+
+			if err1 != nil {
+				panic(err1)
+			}
+
+			tx2, err2 := build.Transaction(
+				build.Network{Passphrase: cli.Network.Passphrase},
+				build.SourceAccount{AddressOrSeed: seed2},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient2()},
+				build.Payment(
+					build.Destination{AddressOrSeed: address2},
+					build.NativeAmount{Amount: amount},
+				),
+			)
+
+			if err2 != nil {
+				panic(err2)
+			}
+
+			tx3, err3 := build.Transaction(
+				build.Network{Passphrase: cli.Network.Passphrase},
+				build.SourceAccount{AddressOrSeed: seed3},
+				build.AutoSequence{SequenceProvider: cli.HorizonClient3()},
+				build.Payment(
+					build.Destination{AddressOrSeed: address3},
+					build.NativeAmount{Amount: amount},
+				),
+			)
+
+			if err2 != nil {
+				panic(err3)
+			}
+
+			submit(cli.HorizonClient1(), tx1, seed1)
+			submit(cli.HorizonClient2(), tx2, seed2)
+			submit(cli.HorizonClient3(), tx3, seed3)
+		},
+	}
+
+	multipayment.Flags().String("seed1", "", "")
+	multipayment.Flags().String("seed2", "", "")
+	multipayment.Flags().String("seed3", "", "")
+	multipayment.Flags().String("address1", "", "")
+	multipayment.Flags().String("address2", "", "")
+	multipayment.Flags().String("address3", "", "")
+	multipayment.Flags().String("amount", "", "")
+	multipayment.MarkFlagRequired("seed1")
+	multipayment.MarkFlagRequired("seed2")
+	multipayment.MarkFlagRequired("seed3")
+	multipayment.MarkFlagRequired("address1")
+	multipayment.MarkFlagRequired("address2")
+	multipayment.MarkFlagRequired("address3")
+	multipayment.MarkFlagRequired("amount")
+
+	cmd.AddCommand(fund, payment, payments, multipayment)
 
 	return cmd
 }
