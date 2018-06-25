@@ -40,7 +40,7 @@ def make_env_file(quorum_dict):
     for node in quorum_dict.keys():
         shutil.copy('default.env', './'+args.name+'/'+'q_' + str(node)+'.env')
         with open('./'+args.name+'/'+'q_'+str(node)+'.env', "a") as f:
-            v_set = "VALIDATORS=["
+            v_set = "VALIDATORS=["+"\"$core"+str(node)+"\", "
             for vnode in quorum_dict[node]:
                 if(vnode != quorum_dict[node][-1]):
                     v_set+=("\"$core"+str(vnode)+"\", ")
@@ -104,7 +104,7 @@ def make_docker_compose_file(quorum_dict, horizon_dict):
     config_dict["volumes"].setdefault("history-data")
 
     with open('./'+args.name+'/'+'docker-compose.yaml', 'w') as f:
-        ruamel.yaml.safe_dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
+        ruamel.yaml.dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
 
 
 def groupset_to_node_validatorset(group_dict):
