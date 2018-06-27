@@ -35,6 +35,7 @@ def convert_json_config(config):
 
     make_env_file(quorum_dict)
     make_docker_compose_file(quorum_dict, horizon_dict)
+    make_sh_file(quorum_dict)
 
 def make_env_file(quorum_dict):
     for node in quorum_dict.keys():
@@ -105,6 +106,26 @@ def make_docker_compose_file(quorum_dict, horizon_dict):
 
     with open('./'+args.name+'/'+'docker-compose.yaml', 'w') as f:
         ruamel.yaml.dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
+
+def make_sh_file(quorum_dict):
+    node_size=len(quorum_dict)
+
+    with open('./'+args.name+'/'+'get_database.sh', 'w') as f:
+
+        str1="""
+        #!/bin/bash
+        field=$1
+        mkdir $field
+        for i in {1.."""+str(node_size) + """}
+        do 
+	    docker_id=$(docker ps -a | grep "db"$i"_1" | cut -d ' ' -f 1)
+	    docker exec -i $docker_id psql -U postgres -d stellar -c "\copy (select * from "$field") to "$field".csv with csv"
+	    docker cp $docker_id:ledgerheaders.csv $field/"node"$i"_ledgerheaders.csv"
+        done
+        """
+        f.write(str1)
+
+    shutil.copy('list_colum_in_database.sh', './'+args.name+'/') 
 
 
 def groupset_to_node_validatorset(group_dict):
