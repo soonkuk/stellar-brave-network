@@ -42,9 +42,8 @@ $ python make_env.py <config file> <docker-compose name>
 
 ## shell script 실행
 
-$ . ./list_colum_in_database.sh
-
 ```
+$ . ./list_colum_in_database.sh
              List of relations
  Schema |     Name      | Type  |  Owner   
 --------+---------------+-------+----------
@@ -67,6 +66,8 @@ $ . ./list_colum_in_database.sh
 ```
 stellar database table명 확인
 
+```
 $ . ./get_database.sh <table name>
+```
 
 `table name` 폴더에 node별 database의 csv파일 생성 
