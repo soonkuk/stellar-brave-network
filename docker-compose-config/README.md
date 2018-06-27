@@ -69,4 +69,4 @@ stellar database table명 확인
 
 $ . ./get_database.sh <table name>
 
-<table name> 폴더에 node별 database의 csv파일 생성 
+`table name` 폴더에 node별 database의 csv파일 생성 
