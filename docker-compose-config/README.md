@@ -35,14 +35,29 @@ horizon은 horizon 갯수 지정과 연결된 stellar core 표시
 
 ```
 $ python install ruamel.yaml
-$ python make_env.py <config file> <docker-compose name>
+$ python make_env.py <config file>
 ```
 
-`docker-compose name`과 같은 이름의 폴더가 생기고 폴더아래 docker-compose 설정파일이 생성
+`config file`의 setting과 같은 이름의 폴더가 생기고 폴더아래 docker-compose 설정파일이 생성됨
 
-## shell script 실행
+ex)config-12.json -> docker-compose-12 
+
+## docker-compose 실행 후 shell script 실행
 
 ```
+$ cd <docker-compose folder>
+$ . ./account.sh   				
+
+account 3개에 대한 public key와 address를 각각 변수에 지정 
+
+$ . ./init_account.sh				
+
+account 3개의 account 생성하고 10240 입금
+
+$ . ./balance.sh <number of horizon>		
+
+각 account 잔고에 대하여 number of horizon의 갯수 만큼 확인
+
 $ . ./list_colum_in_database.sh
              List of relations
  Schema |     Name      | Type  |  Owner   
@@ -63,11 +78,10 @@ $ . ./list_colum_in_database.sh
  public | txfeehistory  | table | postgres
  public | txhistory     | table | postgres
 (15 rows)
-```
+
 stellar database table명 확인
 
-```
 $ . ./get_database.sh <table name>
-```
 
-`table name` 폴더에 node별 database의 csv파일 생성 
+`table name` 폴더에 node별 database의 csv파일 생성
+```
