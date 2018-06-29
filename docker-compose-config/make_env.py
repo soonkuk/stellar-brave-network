@@ -6,7 +6,7 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('config', type=str, help="config json file")
-parser.add_argument('name', type=str, help="docker-compose name")
+# parser.add_argument('name', type=str, help="docker-compose name")
 
 def convert_json_config(config):
     quorum_dict = {}
@@ -39,8 +39,8 @@ def convert_json_config(config):
 
 def make_env_file(quorum_dict):
     for node in quorum_dict.keys():
-        shutil.copy('default.env', './'+args.name+'/'+'q_' + str(node)+'.env')
-        with open('./'+args.name+'/'+'q_'+str(node)+'.env', "a") as f:
+        shutil.copy('default.env', './'+docker_name+'/'+'q_' + str(node)+'.env')
+        with open('./'+docker_name+'/'+'q_'+str(node)+'.env', "a") as f:
             v_set = "VALIDATORS=["+"\"$core"+str(node)+"\", "
             for vnode in quorum_dict[node]:
                 if(vnode != quorum_dict[node][-1]):
@@ -104,28 +104,35 @@ def make_docker_compose_file(quorum_dict, horizon_dict):
 
     config_dict["volumes"].setdefault("history-data")
 
-    with open('./'+args.name+'/'+'docker-compose.yaml', 'w') as f:
+    with open('./'+docker_name+'/'+'docker-compose.yaml', 'w') as f:
         ruamel.yaml.dump(config_dict, f, Dumper=ruamel.yaml.RoundTripDumper)
 
 def make_sh_file(quorum_dict):
     node_size=len(quorum_dict)
 
-    with open('./'+args.name+'/'+'get_database.sh', 'w') as f:
+    with open('./'+docker_name+'/'+'get_database.sh', 'w') as f:
 
         str1="""
         #!/bin/bash
         field=$1
+        if [ ! -d $field ]
+        then 
         mkdir $field
+        fi
         for i in {1.."""+str(node_size) + """}
         do 
-	    docker_id=$(docker ps -a | grep "db"$i"_1" | cut -d ' ' -f 1)
-	    docker exec -i $docker_id psql -U postgres -d stellar -c "\copy (select * from "$field") to "$field".csv with csv"
-	    docker cp $docker_id:ledgerheaders.csv $field/"node"$i"_ledgerheaders.csv"
+	docker_id=$(docker ps -a | grep "db"$i"_1" | cut -d ' ' -f 1)
+	docker exec -i $docker_id psql -U postgres -d stellar -c "\copy (select * from "$field") to "$field".csv with csv"
+	if [ "$i" -lt 10 ];then
+	docker cp $docker_id:ledgerheaders.csv $field/"node0"$i"_ledgerheaders.csv"
+	else
+	docker cp $docker_id:ledgerheaders.csv $field/"node"$i"_ledgerheaders.csv"
+	fi
         done
         """
         f.write(str1)
 
-    shutil.copy('list_colum_in_database.sh', './'+args.name+'/') 
+    shutil.copy('./script/list_database_column.sh', './'+docker_name+'/') 
 
 
 def groupset_to_node_validatorset(group_dict):
@@ -190,10 +197,18 @@ if __name__=='__main__':
     
     args = parser.parse_args()
     config_file = args.config
-    docker_name = args.name
+    str1 = config_file[:-5][6:]
+    docker_name = "docker-compose"+str1
+    if os.path.isdir(docker_name):
+        shutil.rmtree(docker_name)
     os.makedirs("./"+docker_name)
-    shutil.copy('q_inter.cfg.tmpl', './'+docker_name+'/')
-
+    shutil.copy('./script/q_inter.cfg.tmpl', './'+docker_name+'/')
+    shutil.copy('./script/show.sh', './'+docker_name+'/')
+    shutil.copy('./script/account.sh', './'+docker_name+'/')
+    shutil.copy('./script/init_account.sh', './'+docker_name+'/')
+    shutil.copy('./script/config.yaml', './'+docker_name+'/')
+    shutil.copy('./script/balance.sh', './'+docker_name+'/')
+    shutil.copy('./script/payment.sh', './'+docker_name+'/')
     with open(config_file) as f:
         convert_json_config(json.load(f))
 
