@@ -209,6 +209,8 @@ if __name__=='__main__':
     shutil.copy('./script/config.yaml', './'+docker_name+'/')
     shutil.copy('./script/balance.sh', './'+docker_name+'/')
     shutil.copy('./script/payment.sh', './'+docker_name+'/')
+    shutil.copy('./script/leader_list.sh', './'+docker_name+'/')
+    shutil.copy('./script/make_table.py', './'+docker_name+'/')
     with open(config_file) as f:
         convert_json_config(json.load(f))
 
