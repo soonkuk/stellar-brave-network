@@ -14,13 +14,13 @@ local 에선 빌드 오래걸리고 공간을 차지하기에 stellar-core, hori
 $ brew install glide
 
 $ go get github.com/zzim2x/brave-network/cli
-$ cd `go env GOPATH`/src/github.com/zzim2x/brave-network/cli
+$ cd `go env GOPATH`/src/github.com/soonkuk/stellar-brave-network/cli
 $ make
 ```
 
 ## seed & node id 생성
 
-현재 4대의 validator에서 사용할 node seed와 validator 설정값에 넣을 pubkey 생성해야합니다.
+현재 validator에서 사용할 node seed와 validator 설정값에 넣을 pubkey 생성해야합니다.
 
 ```
 $ bin/brave keypair generate
@@ -30,7 +30,7 @@ $ bin/brave keypair parse --seed=SDFFK4WSRSUYGTWTXZTEEBWCKYN43LDU634ZYJTDD2BKG63
 Address: GD77GK4MNNODTAH6FTDM3I7W3UGILJTG4XFIMHLPSIHD76VBDWYLVOJ6
 ```
 
-위 명령어를 4번해서 얻은 seed, id를 core.env 설정에 넣습니다. 현재는 미리 세팅되어져있습니다.
+위 명령어를 통해 얻은 seed, id를 default.env 설정에 넣습니다. 현재는 36개까지의 seed와 id가 미리 세팅되어져있습니다.
 
 ## 구동
 
@@ -101,7 +101,7 @@ $ curl 'http://127.0.0.1:1168{1,2,3,4}/info'
 ## 계정 생성
 
 ```
-$ cd `go env GOPATH`/src/github.com/zzim2x/brave-network/cli
+$ cd `go env GOPATH`/src/github.com/soonkuk/stellar-brave-network/cli
 
 ROOT_SEED=SCTJ4RIYLZLA42675VYOE4QMERVDMQGTUGL44FLPXP3MN6JKD76CLG4M
 ACCOUNT_SEED=`bin/brave keypair generate | awk '{print $2}'`
