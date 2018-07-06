@@ -1,4 +1,4 @@
-## json 형식의 config 파일
+## json config
 
 ```
 {
